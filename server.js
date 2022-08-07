@@ -29,6 +29,7 @@ const data = [
     number: '39-23-6423122',
   },
 ];
+
 logger.token('method', function (req, res) {
   return req.method;
 });
@@ -53,6 +54,9 @@ app.use(
     ':method :url :status :response-time ms - :res[content-length] :postRequest'
   )
 );
+app.get('*', (request, response) => {
+  response.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 app.get('/api/persons', (req, res) => {
   res.json(data);
