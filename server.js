@@ -1,6 +1,10 @@
 const express = require('express');
+const logger = require('morgan');
+const cors = require('cors');
 const PORT = process.env.PORT || 3001;
 const app = express();
+app.use(cors());
+
 app.use(express.json());
 
 const data = [
@@ -25,6 +29,30 @@ const data = [
     number: '39-23-6423122',
   },
 ];
+logger.token('method', function (req, res) {
+  return req.method;
+});
+logger.token('url', function (req, res) {
+  return req.url;
+});
+logger.token('status', function (req, res) {
+  return res.statusCode;
+});
+logger.token('response-time', function (req, res) {
+  const responseTime = res.get('X-Response-Time');
+  return responseTime;
+});
+logger.token('postRequest', function (req, res) {
+  if (req.method === 'POST') {
+    return JSON.stringify(req.body);
+  }
+});
+
+app.use(
+  logger(
+    ':method :url :status :response-time ms - :res[content-length] :postRequest'
+  )
+);
 
 app.get('/api/persons', (req, res) => {
   res.json(data);
@@ -68,9 +96,7 @@ app.post('/api/persons', (req, res) => {
   if (person) {
     return res.status(400).json({ error: 'Name must be unique' });
   }
-  const id = Math.floor((1 + Math.random()) * 0x10000)
-    .toString(16)
-    .substring(1);
+  const id = Math.floor(Math.random() * 100000);
   newPerson.id = id;
   data.push(newPerson);
   res.json(newPerson);
