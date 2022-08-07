@@ -54,9 +54,6 @@ app.use(
     ':method :url :status :response-time ms - :res[content-length] :postRequest'
   )
 );
-app.get('*', (request, response) => {
-  response.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
 
 app.get('/api/persons', (req, res) => {
   res.json(data);
