@@ -4,7 +4,7 @@ const cors = require('cors');
 const PORT = process.env.PORT || 3001;
 const app = express();
 app.use(cors());
-
+app.use(express.static('build'));
 app.use(express.json());
 
 const data = [
