@@ -69,32 +69,46 @@ app.get('/api/persons', (req, res) => {
 });
 
 app.get('/api/info', (req, res) => {
-  res.send(
-    `<p>Phonebook has info for ${
-      data.length
-    } people</p><br/><p>${new Date()}</p>`
-  );
+  Person.find({})
+    .then((result) => {
+      const persons = result.length;
+      const date = new Date();
+      const message = `<p>Phonebook has info for ${persons} people</p><p>${date}</p>`;
+      res.send(message);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 });
 
 app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const person = data.find((person) => person.id === id);
-  if (person) {
-    res.json(person);
-  } else {
-    res.status(404).end();
-  }
+  const id = req.params.id;
+  Person.findById(id)
+    .then((result) => {
+      if (!result) {
+        return res.status(404).end();
+      } else {
+        res.status(200).send(result);
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 });
 
-app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const person = data.find((person) => person.id === id);
-  if (person) {
-    const filtredPersons = data.filter((person) => person.id !== id);
-    res.status(200).json(filtredPersons);
-  } else {
-    res.status(404).json('No such person').end();
-  }
+app.delete('/api/persons/:id', (req, res, next) => {
+  const id = req.params.id;
+  console.log(req.params);
+  Person.findByIdAndRemove(id)
+    .then((result) => {
+      console.log('🚀 ~ result', result);
+      if (result) {
+        res.status(200).json('Deleted successfully');
+      }
+    })
+    .catch((error) => {
+      next(error);
+    });
 });
 
 app.post('/api/persons', (req, res) => {
@@ -125,6 +139,27 @@ app.post('/api/persons', (req, res) => {
       console.log(error);
     });
 });
+
+app.put('/api/persons/:id', (req, res) => {
+  const id = req.params.id;
+  const number = req.body.number;
+  Person.findByIdAndUpdate(id, { number: number }, { new: true })
+    .then((updatedPerson) => {
+      res.status(200).send(updatedPerson);
+    })
+    .catch((error) => {
+      console.log(error);
+      next(error);
+    });
+});
+
+const errorHandlerMiddleware = (error, req, res, next) => {
+  console.log('==================================>', error);
+  if (error.name === 'CastError') {
+    return res.status(400).json({ error: 'malformatted id' });
+  }
+};
+app.use(errorHandlerMiddleware);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
