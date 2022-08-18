@@ -102,14 +102,28 @@ app.post('/api/persons', (req, res) => {
   if (newPerson.name === '' || newPerson.number === '') {
     return res.status(400).json({ error: 'Name or number missing' });
   }
-  const person = data.find((person) => person.name === newPerson.name);
-  if (person) {
-    return res.status(400).json({ error: 'Name must be unique' });
-  }
-  const id = Math.floor(Math.random() * 100000);
-  newPerson.id = id;
-  data.push(newPerson);
-  res.json(newPerson);
+  Person.find({ name: newPerson.name })
+    .then((result) => {
+      if (result.length > 0) {
+        return res.status(400).json({ error: 'Name must be unique' });
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
+  const newEntry = new Person({
+    name: newPerson.name,
+    number: newPerson.number,
+  });
+  newEntry
+    .save()
+    .then(() => {
+      res.status(201).json(newEntry);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 });
 
 app.listen(PORT, () => {
