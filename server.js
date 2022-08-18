@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const logger = require('morgan');
 const cors = require('cors');
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 const app = express();
+const Person = require('./models/person');
 app.use(cors());
 app.use(express.static('build'));
 app.use(express.json());
@@ -56,7 +58,14 @@ app.use(
 );
 
 app.get('/api/persons', (req, res) => {
-  res.json(data);
+  Person.find({})
+    .then((result) => {
+      console.log('🚀 ~ result', result);
+      res.json(result);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
 });
 
 app.get('/api/info', (req, res) => {
