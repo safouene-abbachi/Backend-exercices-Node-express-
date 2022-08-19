@@ -111,39 +111,46 @@ app.delete('/api/persons/:id', (req, res, next) => {
     });
 });
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   const newPerson = req.body;
   if (newPerson.name === '' || newPerson.number === '') {
     return res.status(400).json({ error: 'Name or number missing' });
   }
-  Person.find({ name: newPerson.name })
+  Person.findOne({ name: newPerson.name })
     .then((result) => {
-      if (result.length > 0) {
-        return res.status(400).json({ error: 'Name must be unique' });
+      console.log('🚀 ~ result', result);
+      if (result) {
+        return res.status(400).send({ error: 'Name must be unique' });
+      } else {
+        const newEntry = new Person({
+          name: newPerson.name,
+          number: newPerson.number,
+        });
+        newEntry
+          .save()
+          .then(() => {
+            res.status(201).json(newEntry);
+          })
+          .catch((error) => {
+            console.log(error);
+            next(error);
+          });
       }
     })
     .catch((error) => {
       console.log(error);
-    });
-
-  const newEntry = new Person({
-    name: newPerson.name,
-    number: newPerson.number,
-  });
-  newEntry
-    .save()
-    .then(() => {
-      res.status(201).json(newEntry);
-    })
-    .catch((error) => {
-      console.log(error);
+      next(error);
     });
 });
 
 app.put('/api/persons/:id', (req, res) => {
   const id = req.params.id;
   const number = req.body.number;
-  Person.findByIdAndUpdate(id, { number: number }, { new: true })
+  Person.findByIdAndUpdate(
+    id,
+    { number: number },
+    { new: true, runValidators: true, context: 'query' }
+  )
     .then((updatedPerson) => {
       res.status(200).send(updatedPerson);
     })
@@ -157,6 +164,9 @@ const errorHandlerMiddleware = (error, req, res, next) => {
   console.log('==================================>', error);
   if (error.name === 'CastError') {
     return res.status(400).json({ error: 'malformatted id' });
+  }
+  if (error.name === 'ValidationError') {
+    return res.status(400).json({ error: error.message });
   }
 };
 app.use(errorHandlerMiddleware);
