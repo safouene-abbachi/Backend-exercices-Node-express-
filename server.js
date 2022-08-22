@@ -9,43 +9,20 @@ app.use(cors());
 app.use(express.static('build'));
 app.use(express.json());
 
-const data = [
-  {
-    id: 1,
-    name: 'Arto Hellas',
-    number: '040-123456',
-  },
-  {
-    id: 2,
-    name: 'Ada Lovelace',
-    number: '39-44-5323523',
-  },
-  {
-    id: 3,
-    name: 'Dan Abramov',
-    number: '12-43-234345',
-  },
-  {
-    id: 4,
-    name: 'Mary Poppendieck',
-    number: '39-23-6423122',
-  },
-];
-
-logger.token('method', function (req, res) {
+logger.token('method', function (req) {
   return req.method;
 });
-logger.token('url', function (req, res) {
+logger.token('url', function (req) {
   return req.url;
 });
-logger.token('status', function (req, res) {
+logger.token('status', function (res) {
   return res.statusCode;
 });
-logger.token('response-time', function (req, res) {
+logger.token('response-time', function (res) {
   const responseTime = res.get('X-Response-Time');
   return responseTime;
 });
-logger.token('postRequest', function (req, res) {
+logger.token('postRequest', function (req) {
   if (req.method === 'POST') {
     return JSON.stringify(req.body);
   }
@@ -57,7 +34,7 @@ app.use(
   )
 );
 
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', (res) => {
   Person.find({})
     .then((result) => {
       console.log('🚀 ~ result', result);
@@ -68,7 +45,7 @@ app.get('/api/persons', (req, res) => {
     });
 });
 
-app.get('/api/info', (req, res) => {
+app.get('/api/info', (res) => {
   Person.find({})
     .then((result) => {
       const persons = result.length;
@@ -143,7 +120,7 @@ app.post('/api/persons', (req, res, next) => {
     });
 });
 
-app.put('/api/persons/:id', (req, res) => {
+app.put('/api/persons/:id', (req, res, next) => {
   const id = req.params.id;
   const number = req.body.number;
   Person.findByIdAndUpdate(
@@ -160,7 +137,7 @@ app.put('/api/persons/:id', (req, res) => {
     });
 });
 
-const errorHandlerMiddleware = (error, req, res, next) => {
+const errorHandlerMiddleware = (error, res) => {
   console.log('==================================>', error);
   if (error.name === 'CastError') {
     return res.status(400).json({ error: 'malformatted id' });
